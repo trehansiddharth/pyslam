@@ -8,6 +8,7 @@ class SLAM {
 public:
     SLAM(const std::string strVocFile, const std::string strSettingsFile);
     cv::Mat update(const cv::Mat rgb, const cv::Mat depth, const double timestamp);
+    void reset();
 private:
     ORB_SLAM2::System* pSLAM;
 };
