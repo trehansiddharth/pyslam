@@ -1,0 +1,41 @@
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+PROJECT(pyslam)
+
+SET(CMAKE_CXX_STANDARD 11)
+
+FIND_PACKAGE(SWIG REQUIRED)
+FIND_PACKAGE(PythonLibs)
+FIND_PACKAGE(OpenCV REQUIRED)
+
+INCLUDE(${SWIG_USE_FILE})
+
+INCLUDE_DIRECTORIES("/home/nvidia/opencv-swig/lib"
+    ${OpenCV_INCLUDE_DIRS}
+    ${PYTHON_INCLUDE_DIRS}
+    ${PROJECT_SOURCE_DIR}/src
+    /usr/local/include
+    /usr/include/eigen3/
+)
+
+ADD_LIBRARY(pyslam SHARED src/pyslam.cpp)
+TARGET_LINK_LIBRARIES(pyslam
+    ${OpenCV_LIBRARIES}
+    ${PYTHON_LIBRARIES}
+    ORB_SLAM2
+)
+
+SET_PROPERTY(SOURCE src/pyslam.i PROPERTY CPLUSPLUS ON)
+SWIG_ADD_MODULE(slam python src/pyslam.i)
+SWIG_LINK_LIBRARIES(slam pyslam ${PYTHON_LIBRARIES})
+
+EXECUTE_PROCESS(COMMAND python3 -c "if True:
+    from distutils import sysconfig as sc
+    print(sc.get_python_lib(prefix='', plat_specific=True))"
+    OUTPUT_VARIABLE PYTHON_SITE
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+INSTALL(TARGETS pyslam
+    DESTINATION ${PYTHON_SITE})
+INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/_slam.so
+    ${CMAKE_CURRENT_BINARY_DIR}/slam.py
+    DESTINATION ${PYTHON_SITE})
